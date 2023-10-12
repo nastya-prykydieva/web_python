@@ -1,5 +1,7 @@
 import cgi
 import html
+import http.cookies
+import os
 
 form = cgi.FieldStorage()
 
@@ -21,6 +23,13 @@ for discipline in disciplines:
     if discipline in form:
         selected.append(discipline)
 
+cookie = http.cookies.SimpleCookie(os.environ.get("HTTP_COOKIE"))
+if "count" in cookie:
+    count = int(cookie["count"].value) + 1
+else:
+    count = 1
+
+print(f"Set-cookie: count={count};")
 print("Content-type:text/html\r\n\r\n")
 
 template_html = f"""
@@ -38,6 +47,7 @@ template_html = f"""
     Група: {group}<br><br>
     Чи завершений Ваш вибір навчальних дисциплін? {done}<br><br>
     Обрані Вами дисципліни:<br> – {"<br> – ".join(selected)}<br><br>
+    Кількість заповнених форм: {count}<br><br>
 </body>
 </html>
 """
