@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форма</title>
+</head>
+<body>
+    <h3>Затвердження дисциплін вільного вибору</h3>
+    <form action="./cgi-bin/form_handler.py" method="post">
+        Прізвище:
+        <br><input type="text" name="surname"><br>
+        Ім'я:
+        <br><input type="text" name="name"><br>
+        Група:
+        <br><input type="text" name="group"><br><br>
+        Чи завершений Ваш вибір навчальних дисциплін?<br>
+        <input type="radio" name="done" value="Так"> Так
+        <input type="radio" name="done" value="Ні"> Ні
+        <br><br>
+        Обрані Вами дисципліни:
+        <br><input type="checkbox" name="Вебпрограмування мовою Python"> Вебпрограмування мовою Python
+        <br><input type="checkbox" name="Економіка програмного забезпечення"> Економіка програмного забезпечення
+        <br><input type="checkbox" name="Комп'ютерна графіка"> Комп'ютерна графіка
+        <br><input type="checkbox" name="Основи штучного інтелекту"> Основи штучного інтелекту
+        <br><input type="checkbox" name="Машинне навчання"> Машинне навчання
+        <br><br>
+        <button type="submit">Підтверити</button><br><br>
+    </form>
+</body>
+</html>
