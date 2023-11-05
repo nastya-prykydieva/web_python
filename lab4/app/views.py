@@ -1,3 +1,5 @@
+import json
+
 from flask import request, render_template, redirect, url_for, make_response, session
 from app import app
 from datetime import datetime
@@ -50,17 +52,28 @@ def contact():
                            time=datetime.now())
 
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    return render_template('login.html',
+@app.route('/info')
+def info():
+    return render_template('info.html',
+                           username=session['username'],
                            os=os.name,
                            user_agent=request.headers.get('User-Agent'),
                            time=datetime.now())
 
 
-@app.route('/info')
-def info_page():
-    return render_template('info.html',
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    with open('app/file.json', 'r') as f:
+        file_data = json.load(f)
+    json_username = file_data['username']
+    json_password = file_data['password']
+    if request.method == "POST":
+        form_username = request.form.get("username")
+        form_password = request.form.get("password")
+        if form_username == json_username and form_password == json_password:
+            session['username'] = form_username
+            return redirect(url_for('info'))
+    return render_template('login.html',
                            os=os.name,
                            user_agent=request.headers.get('User-Agent'),
                            time=datetime.now())
