@@ -54,11 +54,14 @@ def contact():
 
 @app.route('/info')
 def info():
-    return render_template('info.html',
-                           username=session['username'],
-                           os=os.name,
-                           user_agent=request.headers.get('User-Agent'),
-                           time=datetime.now())
+    if 'username' in session:
+        username = session['username']
+        return render_template('info.html',
+                               username=username,
+                               os=os.name,
+                               user_agent=request.headers.get('User-Agent'),
+                               time=datetime.now())
+    return redirect(url_for('login'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -77,3 +80,9 @@ def login():
                            os=os.name,
                            user_agent=request.headers.get('User-Agent'),
                            time=datetime.now())
+
+
+@app.route('/logout', methods=["POST"])
+def logout():
+    session.pop('username', None)
+    return redirect(url_for('login'))

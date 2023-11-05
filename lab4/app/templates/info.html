@@ -5,5 +5,9 @@
     <div class="bg-dark-subtle p-5 mt-5 mb-5 text-center">
         <p>You've logged in.</p>
         <p>Welcome back to the site!</p>
+
+        <form action={{url_for('logout')}} method="post">
+            <button type="submit" class="btn btn-primary btn-lg">Log out</button>
+        </form>
     </div>
 {% endblock %}
