@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Form{% endblock %}
+{% from "render_field.html" import render_field %}
+{% block content %}
+<h2 class="fs-1 mt-5 text-center">Log in</h2>
+<form action={{url_for("login")}} method="post" class="bg-dark-subtle p-5 mt-5 mb-5 text-center" novalidate>
+    {{form.hidden_tag()}}
+    {{render_field(form.username)}}
+    {{render_field(form.password)}}
+    {{form.remember}}
+    {{form.remember.label}}
+    {{form.submit(class="btn btn-primary btn-lg bg-dark")}}
+</form>
+{% endblock %}
