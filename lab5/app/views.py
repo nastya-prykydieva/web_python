@@ -1,4 +1,4 @@
-from flask import request, render_template, redirect, url_for, make_response, session
+from flask import request, render_template, redirect, url_for, make_response, session, flash
 from app import app
 from datetime import datetime
 from .forms import LoginForm
@@ -46,12 +46,15 @@ def add_file_data():
             d = json.load(file)
         return d
     except FileNotFoundError:
-        return {}
+        return flash("File doesn't exist!")
 
 
 file_data = add_file_data()
-json_username = file_data['username']
-json_password = file_data['password']
+try:
+    json_username = file_data['username']
+    json_password = file_data['password']
+except TypeError:
+    flash("Error with data!", "error")
 
 
 @app.route('/info')
@@ -69,8 +72,16 @@ def login():
         form_username = form.username.data
         form_password = form.password.data
         if form_username == json_username and form_password == json_password:
-            session['username'] = form_username
-            return redirect(url_for('info'))
+            if form.remember.data:
+                session['username'] = form_username
+                flash("You've logged in successfully!", category="success")
+                return redirect(url_for('info'))
+            else:
+                flash("You've logged in successfully!", category="success")
+                return redirect(url_for('about'))
+        else:
+            flash("Error! Please, try again.", category="danger")
+            return redirect(url_for('login'))
     return render_template('login.html', form=form)
 
 
