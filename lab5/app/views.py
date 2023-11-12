@@ -1,10 +1,9 @@
 from flask import request, render_template, redirect, url_for, make_response, session, flash
 from app import app
 from datetime import datetime
-from .forms import LoginForm
+from .forms import LoginForm, ChangePasswordForm
 import json
 import os
-
 
 
 @app.context_processor
@@ -49,19 +48,12 @@ def add_file_data():
         return flash("File doesn't exist!")
 
 
-file_data = add_file_data()
-try:
-    json_username = file_data['username']
-    json_password = file_data['password']
-except TypeError:
-    flash("Error with data!", "error")
-
-
 @app.route('/info')
 def info():
+    form = ChangePasswordForm()
     if 'username' in session:
         username = session['username']
-        return render_template('info.html', username=username)
+        return render_template('info.html', username=username, form=form)
     return redirect(url_for('login'))
 
 
@@ -71,6 +63,14 @@ def login():
     if form.validate_on_submit():
         form_username = form.username.data
         form_password = form.password.data
+        file_data = add_file_data()
+        try:
+            json_username = file_data['username']
+            json_password = file_data['password']
+        except TypeError:
+            flash("Error with data!", "error")
+            raise SystemExit("Error with data!")
+
         if form_username == json_username and form_password == json_password:
             if form.remember.data:
                 session['username'] = form_username
@@ -93,50 +93,71 @@ def logout():
 
 @app.route('/add_cookie', methods=['POST'])
 def add_cookie():
+    form = ChangePasswordForm()
     if 'username' in session:
         username = session['username']
         cookies = request.cookies
         key = request.form.get('key')
         value = request.form.get('value')
         max_age = int(request.form.get('max_age'))
-        resp = make_response(render_template('info.html', username=username, cookies=cookies,
-                                             done="Cookie is added! Please, refresh the page"))
+        resp = make_response(render_template('info.html', username=username, cookies=cookies, form=form))
         resp.set_cookie(key, value, max_age=max_age)
+        flash("Cookie is added! Please, refresh the page.", "success")
         return resp
 
 
 @app.route('/remove_cookie', methods=['POST'])
 def remove_cookie():
+    form = ChangePasswordForm()
     if 'username' in session:
         username = session['username']
         cookies = request.cookies
         key = request.form.get('key')
-        resp = make_response(render_template('info.html', username=username, cookies=cookies,
-                                             done="Cookie is deleted! Please, refresh the page"))
+        resp = make_response(render_template('info.html', username=username, cookies=cookies, form=form))
         if key in cookies:
             resp.delete_cookie(key)
+            flash("Cookie is deleted! Please, refresh the page.", "success")
         return resp
 
 
 @app.route('/remove_all_cookies', methods=['POST'])
 def remove_all_cookies():
+    form = ChangePasswordForm()
     if 'username' in session:
         username = session['username']
         cookies = request.cookies
-        resp = make_response(render_template('info.html', username=username, cookies=cookies,
-                                             done="All cookies are deleted! Please, refresh the page"))
+        resp = make_response(render_template('info.html', username=username, cookies=cookies, form=form))
         for key in cookies.keys():
             print(key)
             if key != 'session':
                 resp.delete_cookie(key)
+            flash("All cookies are deleted!", "success")
         return resp
 
 
 @app.route('/change_password', methods=['GET', 'POST'])
 def change_password():
-    if request.method == "POST":
-        session['password'] = request.form.get("new_password")
-        with open('app/file.json', "w") as file:
-            file_data['password'] = request.form.get("new_password")
-            json.dump(file_data, file)
-    return redirect(url_for("info"))
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        old_password = form.old_password.data
+        new_password = form.new_password.data
+        confirm_password = form.confirm_password.data
+
+        file_data = add_file_data()
+        try:
+            json_password = file_data['password']
+        except TypeError:
+            flash("Error with data!", "error")
+            raise SystemExit("Error with data!")
+
+        if old_password == json_password:
+            if new_password == confirm_password:
+                session['password'] = new_password
+                with open('app/file.json', "w") as file:
+                    file_data['password'] = new_password
+                    json.dump(file_data, file)
+                    flash("Password was changed.", "success")
+                    return redirect(url_for('info'))
+        flash("Password was not changed.", "danger")
+        return redirect(url_for('info'))
+    return render_template('info.html', form=form)
