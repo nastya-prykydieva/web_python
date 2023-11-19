@@ -58,15 +58,6 @@ def info():
     return render_template('info.html', email=session.get('email'), form=form)
 
 
-# @app.route('/register', methods=['GET', 'POST'])
-# def register():
-#     form = RegistrationForm()
-#     if form.validate_on_submit():
-#         flash(f'Account created for {form.username.data}!', category='success')
-#         redirect(url_for('login'))
-#     return render_template('register.html', form=form, title='Register')
-
-
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -84,7 +75,7 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        if user and user.password == form.password.data:
+        if user and user.verify_password(form.password.data):
             if form.remember.data:
                 session['email'] = form.email.data
                 session['password'] = form.password.data
@@ -98,16 +89,11 @@ def login():
             return redirect(url_for('login'))
     return render_template('login.html', form=form)
 
-# @app.route('/login', methods=['GET', 'POST'])
-# def login():
-#     form = LoginForm()
-#     if form.validate_on_submit():
-#         if form.email.data == 'user@gmail.com' and form.password.data == 'user123':
-#             flash('You have been logged in!', category="success")
-#             return redirect(url_for('info'))
-#         else:
-#             flash('Login unsuccessful. Please, check username or password', category='warning')
-#     return render_template('login.html', form=form, title='Login')
+
+@app.route('/users')
+def users():
+    all_users = User.query.all()
+    return render_template('users.html', all_users=all_users)
 
 
 @app.route('/logout', methods=["POST"])
