@@ -1,6 +1,6 @@
 from flask import request, render_template, redirect, url_for, make_response, session, flash
-from app import app
-from .models import Todo, db, Feedback, User
+from app import app, db
+from .models import Todo, Feedback, User
 from datetime import datetime
 from .forms import RegistrationForm, LoginForm, ChangePasswordForm, ToDoForm, FeedbackForm
 import json
@@ -52,36 +52,67 @@ def add_file_data():
 @app.route('/info')
 def info():
     form = ChangePasswordForm()
-    if 'username' in session:
-        username = session['username']
-        return render_template('info.html', username=username, form=form)
-    return redirect(url_for('login'))
+    if 'email' not in session:
+        flash('Please, log in to see this page.', category='danger')
+        return redirect(url_for('login'))
+    return render_template('info.html', email=session.get('email'), form=form)
+
+
+# @app.route('/register', methods=['GET', 'POST'])
+# def register():
+#     form = RegistrationForm()
+#     if form.validate_on_submit():
+#         flash(f'Account created for {form.username.data}!', category='success')
+#         redirect(url_for('login'))
+#     return render_template('register.html', form=form, title='Register')
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
-        flash(f'Account created for {form.username.data}!', category='success')
-        redirect(url_for('login'))
-    return render_template('register.html', form=form, title='Register')
+        user = User(username=form.username.data, email=form.email.data, password=form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash(f'Account created for {form.username.data}!', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html', form=form)
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        if form.email.data == 'user@gmail.com' and form.password.data == 'user123':
-            flash('You have been logged in!', category="success")
-            return redirect(url_for('info'))
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and user.password == form.password.data:
+            if form.remember.data:
+                session['email'] = form.email.data
+                session['password'] = form.password.data
+                flash('You have been logged in and remembered!', category='success')
+                return redirect(url_for('info'))
+            else:
+                flash('You have been logged in!', category='success')
+                return redirect(url_for('about'))
         else:
-            flash('Login unsuccessful. Please, check username or password', category='warning')
-    return render_template('login.html', form=form, title='Login')
+            flash('Error! Please, try again.', category='danger')
+            return redirect(url_for('login'))
+    return render_template('login.html', form=form)
+
+# @app.route('/login', methods=['GET', 'POST'])
+# def login():
+#     form = LoginForm()
+#     if form.validate_on_submit():
+#         if form.email.data == 'user@gmail.com' and form.password.data == 'user123':
+#             flash('You have been logged in!', category="success")
+#             return redirect(url_for('info'))
+#         else:
+#             flash('Login unsuccessful. Please, check username or password', category='warning')
+#     return render_template('login.html', form=form, title='Login')
 
 
 @app.route('/logout', methods=["POST"])
 def logout():
-    session.pop('username', None)
+    session.pop('email', None)
     return redirect(url_for('login'))
 
 
