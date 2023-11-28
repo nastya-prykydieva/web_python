@@ -1,8 +1,9 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, TextAreaField, SelectField, FileField, BooleanField
+from wtforms import StringField, SubmitField, TextAreaField, SelectField, FileField, BooleanField, SelectMultipleField
 from wtforms.validators import DataRequired, Length
 from flask_wtf.file import FileAllowed
-from .models import Type
+from app import db
+from .models import Type, Category, Tag
 
 
 class PostForm(FlaskForm):
@@ -11,4 +12,22 @@ class PostForm(FlaskForm):
     image = FileField('Image', validators=[FileAllowed(["jpg", "png"])])
     type = SelectField('Type', choices=[e.name for e in Type])
     enabled = BooleanField('Enabled')
+    category = SelectField('Category', coerce=int)
+    tags = SelectMultipleField('Tags', coerce=int)
+    submit = SubmitField('Submit')
+
+
+class CategoryForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=1, max=100)])
+    submit = SubmitField('Submit')
+
+
+class TagForm(FlaskForm):
+    name = StringField(label='Name', validators=[DataRequired(), Length(min=1, max=100)])
+    submit = SubmitField(label="Save tag")
+
+
+class SelectCategoryForm(FlaskForm):
+    category = SelectField('Select Category', default='all',
+                           choices=[('all', 'All')] + [(c.id, c.name) for c in db.session.query(Category)])
     submit = SubmitField('Submit')
